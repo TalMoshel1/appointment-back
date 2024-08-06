@@ -12,7 +12,7 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:3001",
-  "https://boxing-front.onrender.com",
+  "https://appointment-front-5jsl.onrender.com",
 ];
 
 const corsOptions = {
