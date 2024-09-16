@@ -9,7 +9,7 @@ export async function registration(req, res) {
   const { username, password, phone, email } = req.body;
   try {
     let role = "regular";
-    const adminPhoneNumbers = ["0502323574"];
+    const adminPhoneNumbers = ["0502323574",'0544541145'];
 
     if (adminPhoneNumbers.includes(phone)) {
       role = "admin";

@@ -126,7 +126,6 @@ export async function requestPrivateLesson(req, res) {
   }
   const createRequest = await lessonService.createLesson(lessonData);
 
-
   if (createRequest) {
     const emailBody = `
     פלאפון:
@@ -139,7 +138,7 @@ export async function requestPrivateLesson(req, res) {
     ${startTime} - ${endTime}.
 
    לאישור האימון, פתח קישור:
-   http://localhost:3000/approveLink/${createRequest._id}
+   https://appointment-back-qd2z.onrender.com/approveLink/${createRequest._id}
   `;
 
     const sendEmailToApprove = await messageService(
@@ -170,15 +169,16 @@ export async function getWeeklyLessons(req, res) {
 export async function getDayLessons(req, res) {
   const { date } = req.body;
 
-
   try {
     const lessons = await lessonService.getDayLessons(new Date(date));
     if (!lessons.message) {
+
       res.status(200).json(lessons);
     } else {
       res.status(400).json({ message: "no lessons for today" });
     }
   } catch (error) {
+    console.log('4')
     res.status(500).json({ message: error.message });
   }
 }
