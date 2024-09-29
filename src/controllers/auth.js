@@ -39,7 +39,16 @@ export async function signIn(req, res) {
   try {
     const { email, password } = req.body;
     const data = await serviceSignIn(email, password);
-    res.json({ data });
+    res.cookie("token", data, {
+      httpOnly: true, 
+      secure: true, 
+      sameSite: "None",
+      maxAge: 24 * 60 * 60 * 1000, 
+    });
+    res.status(200).cookie('cookie', {
+      data
+    }).json({success: 'success'})
+    // res.json({ data });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
