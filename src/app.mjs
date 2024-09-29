@@ -14,7 +14,8 @@ const allowedOrigins = [
   "http://localhost:3001",
   "http://localhost:3002",
   "https://appointment-front-5jsl.onrender.com",
-  "https://appointment-admin-6f1y.onrender.com"
+  "https://appointment-admin-6f1y.onrender.com",
+  "https://authorization-front.vercel.app/"
 ];
 
 const corsOptions = {

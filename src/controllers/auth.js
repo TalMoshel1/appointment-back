@@ -39,7 +39,7 @@ export async function signIn(req, res) {
   try {
     const { email, password } = req.body;
     const data = await serviceSignIn(email, password);
-    res.cookie("token", data, {
+    res.cookie("token", data, { /*this until line 50 is alternative to send it via .json */
       httpOnly: true, 
       secure: true, 
       sameSite: "None",
