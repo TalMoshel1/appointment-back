@@ -5,8 +5,9 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
-import * as lessonService from '../services/lesson-service.js';
-import { ObjectId } from 'mongodb';
+import * as lessonService from "../services/lesson-service.js";
+import { ObjectId } from "mongodb";
+import { messageService } from "../services/message.js";
 export function createLesson(_x, _x2) {
   return _createLesson.apply(this, arguments);
 }
@@ -22,6 +23,10 @@ function _createLesson() {
       repeatsWeekly,
       repeatEndDate
     } = req.body;
+    const parsedRepeatEndDate = repeatsWeekly ? repeatEndDate ? new Date(repeatEndDate) : null : null;
+    const dayOfWeek = new Date(day).toLocaleString("en-us", {
+      weekday: "short"
+    });
     const lessonData = {
       name,
       trainer,
@@ -30,26 +35,43 @@ function _createLesson() {
       startTime,
       endTime,
       repeatsWeekly,
-      type: 'group',
-      isApproved: true
+      type: "group",
+      isApproved: true,
+      dayOfWeek: dayOfWeek
     };
     try {
       if (!(name && trainer && day && startTime && endTime)) {
         return res.status(400).json({
-          message: 'Fill in all required fields'
+          message: "Fill in all required fields"
         });
       }
       let createdLesson;
       let additionalLessons = [];
       if (repeatsWeekly) {
         const repeatedIndex = new ObjectId();
+        if (parsedRepeatEndDate) {
+          const isConflict = yield lessonService.checkRepeatedLesson(_objectSpread(_objectSpread({}, lessonData), {}, {
+            repeatedIndex
+          }), parsedRepeatEndDate);
+          if (isConflict) {
+            return res.status(400).json({
+              message: "כבר קבועים שיעורים באחד ממועדים אלו"
+            });
+          }
+        }
         additionalLessons = yield lessonService.createWeeklyLessons(_objectSpread(_objectSpread({}, lessonData), {}, {
           repeatedIndex
-        }), new Date(repeatEndDate));
+        }), parsedRepeatEndDate);
         createdLesson = yield lessonService.createLesson(_objectSpread(_objectSpread({}, lessonData), {}, {
           repeatedIndex
         }));
       } else {
+        const isConflict = yield lessonService.checkRepeatedLesson(_objectSpread({}, lessonData));
+        if (isConflict) {
+          return res.status(403).json({
+            message: "קבוע לך שיעור במועד זה"
+          });
+        }
         createdLesson = yield lessonService.createLesson(lessonData);
       }
       if (repeatsWeekly) {
@@ -57,6 +79,7 @@ function _createLesson() {
       }
       res.status(201).json(createdLesson);
     } catch (error) {
+      console.error("Error creating lesson:", error);
       res.status(500).json({
         message: error.message
       });
@@ -75,7 +98,8 @@ function _requestPrivateLesson() {
       endTime,
       studentName,
       studentPhone,
-      studentMail
+      studentMail,
+      trainer
     } = req.body;
     const lessonData = {
       day,
@@ -83,15 +107,34 @@ function _requestPrivateLesson() {
       endTime,
       studentName,
       studentPhone,
-      studentMail
+      studentMail,
+      trainer,
+      type: "private",
+      isApproved: false
     };
-    if (!(day && startTime && endTime && studentName && studentPhone && studentMail)) {
+    if (!(day && startTime && endTime && studentName && studentPhone && studentMail && trainer)) {
       return res.status(400).json({
-        message: 'Fill in all required fields'
+        message: "מלא את כל השדות"
       });
     }
     const createRequest = yield lessonService.createLesson(lessonData);
-    return res.status(201).json(createRequest);
+    if (createRequest) {
+      const emailBody = `
+    פלאפון:
+    ${studentPhone}.
+    מאמן:
+    ${trainer}.
+    יום:
+    ${day}
+    שעות: 
+    ${startTime} - ${endTime}.
+
+   לאישור האימון, פתח קישור:
+   https://appointment-back-qd2z.onrender.com/approveLink/${createRequest._id}
+  `;
+      const sendEmailToApprove = yield messageService(studentName, studentMail, "בקשה לאימון אישי", emailBody, "davidaboxing@gmail.com");
+      return res.status(201).json(createRequest);
+    }
   });
   return _requestPrivateLesson.apply(this, arguments);
 }
@@ -114,7 +157,33 @@ function _getWeeklyLessons() {
   });
   return _getWeeklyLessons.apply(this, arguments);
 }
-export function updateLesson(_x7, _x8) {
+export function getDayLessons(_x7, _x8) {
+  return _getDayLessons.apply(this, arguments);
+}
+function _getDayLessons() {
+  _getDayLessons = _asyncToGenerator(function* (req, res) {
+    const {
+      date
+    } = req.body;
+    try {
+      const lessons = yield lessonService.getDayLessons(new Date(date));
+      if (!lessons.message) {
+        res.status(200).json(lessons);
+      } else {
+        res.status(400).json({
+          message: "no lessons for today"
+        });
+      }
+    } catch (error) {
+      console.log('4');
+      res.status(500).json({
+        message: error.message
+      });
+    }
+  });
+  return _getDayLessons.apply(this, arguments);
+}
+export function updateLesson(_x9, _x10) {
   return _updateLesson.apply(this, arguments);
 }
 function _updateLesson() {
@@ -127,7 +196,7 @@ function _updateLesson() {
       const updatedLesson = yield lessonService.updateLesson(lessonId, updatedLessonData);
       if (!updatedLesson) {
         return res.status(404).json({
-          message: 'Lesson not found'
+          message: "Lesson not found"
         });
       }
       res.status(200).json(updatedLesson);
@@ -139,7 +208,7 @@ function _updateLesson() {
   });
   return _updateLesson.apply(this, arguments);
 }
-export function deleteLesson(_x9, _x10) {
+export function deleteLesson(_x11, _x12) {
   return _deleteLesson.apply(this, arguments);
 }
 function _deleteLesson() {
@@ -153,7 +222,7 @@ function _deleteLesson() {
     try {
       yield lessonService.deleteLesson(lessonId, deleteAll);
       res.status(200).json({
-        message: `${deleteAll ? 'Lessons' : 'Lesson'} deleted successfully`
+        message: `${deleteAll ? "Lessons" : "Lesson"} deleted successfully`
       });
     } catch (error) {
       res.status(500).json({
@@ -162,4 +231,58 @@ function _deleteLesson() {
     }
   });
   return _deleteLesson.apply(this, arguments);
+}
+export function approvePrivateLesson(_x13, _x14) {
+  return _approvePrivateLesson.apply(this, arguments);
+}
+function _approvePrivateLesson() {
+  _approvePrivateLesson = _asyncToGenerator(function* (req, res) {
+    const {
+      lessonId
+    } = req.params;
+    try {
+      const doesPossibleToApprove = yield lessonService.doesApprovePossible(lessonId);
+      if (doesPossibleToApprove) {
+        const approvedLesson = yield lessonService.approveLessonById(lessonId);
+        res.status(200).json({
+          message: "Lesson approved successfully",
+          lesson: approvedLesson
+        });
+      } else {
+        res.status(500).json({
+          message: "כבר יש לך שיעור במועד זה"
+        });
+      }
+    } catch (error) {
+      console.error("Error approving lesson:", error);
+      res.status(500).json({
+        message: "Error approving lesson",
+        error: error.message
+      });
+    }
+  });
+  return _approvePrivateLesson.apply(this, arguments);
+}
+export function getDaysLessons(_x15, _x16) {
+  return _getDaysLessons.apply(this, arguments);
+}
+function _getDaysLessons() {
+  _getDaysLessons = _asyncToGenerator(function* (req, res) {
+    const {
+      start,
+      end
+    } = req.body;
+    try {
+      const lessons = yield lessonService.getDaysLessons(start, end);
+      if (lessons) {
+        res.status(200).json(lessons);
+      }
+    } catch (e) {
+      res.status(500).json({
+        message: "Error getting day's lessons: ",
+        e
+      });
+    }
+  });
+  return _getDaysLessons.apply(this, arguments);
 }

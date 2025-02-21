@@ -20,6 +20,8 @@ const app = express();
 // ];
 
 const allowedOriginsString = process.env.ALLOWED_ORIGINS;
+
+
 const allowedOrigins = allowedOriginsString.split(',');
 
 

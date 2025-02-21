@@ -51,6 +51,11 @@ const lessonSchema = new Schema({
   isApproved: {
     type: Boolean,
     default: false
-  }
+  },
+  dayOfWeek: {
+    type: String,
+    default: false
+  } // required only for group 
 });
+
 export const Lesson = mongoose.model('Lesson', lessonSchema);

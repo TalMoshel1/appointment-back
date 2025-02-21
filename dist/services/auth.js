@@ -20,7 +20,10 @@ function _serviceSignIn() {
         throw new Error('Invalid password');
       }
       const token = getToken(user);
-      return token;
+      return {
+        token,
+        user
+      };
     } catch (error) {
       console.error('Error in service SignIn:', error.message);
       throw new Error('Authentication failed');

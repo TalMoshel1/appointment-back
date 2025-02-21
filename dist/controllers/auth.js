@@ -4,6 +4,7 @@ import { serviceSignIn } from "../services/auth.js";
 import { createUser } from "../services/users.js";
 import { User } from "../models/user.js";
 import crypto from "crypto";
+import jwt from 'jsonwebtoken';
 import { messageService } from "../services/message.js";
 export function registration(_x, _x2) {
   return _registration.apply(this, arguments);
@@ -18,7 +19,7 @@ function _registration() {
     } = req.body;
     try {
       let role = "regular";
-      const adminPhoneNumbers = ["0502323574"];
+      const adminPhoneNumbers = ["0502323574", '0544541145'];
       if (adminPhoneNumbers.includes(phone)) {
         role = "admin";
       }
@@ -50,9 +51,18 @@ function _signIn() {
         email,
         password
       } = req.body;
-      const token = yield serviceSignIn(email, password);
+      const data = yield serviceSignIn(email, password);
+      // res.cookie("token", data, { /*this until line 50 is alternative to send it via .json */
+      //   httpOnly: true, 
+      //   secure: true, 
+      //   sameSite: "None",
+      //   maxAge: 24 * 60 * 60 * 1000, 
+      // });
+      // res.status(200).cookie('cookie', {
+      //   data
+      // }).json({success: 'success'})
       res.json({
-        token
+        data
       });
     } catch (error) {
       res.status(500).json({
@@ -131,4 +141,22 @@ function _resetPasswordPhone() {
     }
   });
   return _resetPasswordPhone.apply(this, arguments);
+}
+export function isTokenExpired(req, res) {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) {
+    return res.status(401).json({
+      message: 'Token is missing'
+    });
+  }
+  jwt.verify(authHeader, process.env.JWT_Secret_Key, (err, user) => {
+    if (err) {
+      return res.status(403).json({
+        message: 'Token is invalid or expired'
+      });
+    }
+    return res.status(200).json({
+      message: 'Token is valid'
+    });
+  });
 }
