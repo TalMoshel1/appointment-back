@@ -10,14 +10,19 @@ dotenv.config();
 
 const app = express();
 
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:3001",
-  "http://localhost:3002",
-  "https://appointment-front-5jsl.onrender.com",
-  "https://appointment-admin-6f1y.onrender.com",
-  "https://authorization-front.vercel.app/"
-];
+// const allowedOrigins = [
+//   "http://localhost:3000",
+//   "http://localhost:3001",
+//   "http://localhost:3002",
+//   "https://appointment-front-5jsl.onrender.com",
+//   "https://appointment-admin-6f1y.onrender.com",
+//   "https://authorization-front.vercel.app/"
+// ];
+
+const allowedOriginsString = process.env.ALLOWED_ORIGINS;
+const allowedOrigins = allowedOriginsString.split(',');
+
+
 
 const corsOptions = {
   origin: function (origin, callback) {
