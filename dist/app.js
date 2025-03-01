@@ -1,22 +1,16 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from 'path';
+import { fileURLToPath } from 'url';
 import connectToDb from "./db/connectToDb.js";
 import lessonRoutes from "./routes/lesson.js";
 import authRoutes from "./routes/auth.js";
 import messageRoute from "./routes/message.js";
 dotenv.config();
 const app = express();
-
-// const allowedOrigins = [
-//   "http://localhost:3000",
-//   "http://localhost:3001",
-//   "http://localhost:3002",
-//   "https://appointment-front-5jsl.onrender.com",
-//   "https://appointment-admin-6f1y.onrender.com",
-//   "https://authorization-front.vercel.app/"
-// ];
-
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const allowedOriginsString = process.env.ALLOWED_ORIGINS;
 const allowedOrigins = allowedOriginsString.split(',');
 const corsOptions = {
@@ -45,6 +39,10 @@ app.use((req, res, next) => {
 app.use("/api/lessons", lessonRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/message", messageRoute);
+app.use(express.static(path.join(__dirname, '../client/build')));
+app.get('**/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+});
 const PORT = process.env.PORT || 3000;
 connectToDb().then(() => {
   app.listen(PORT, () => {
