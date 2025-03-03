@@ -22,6 +22,6 @@ export async function serviceSignIn(email, password) {
 }
 
 function getToken(user) {
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_Secret_Key, { expiresIn: '1w' });
+    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_Secret_Key, { expiresIn: '1w' });
     return token;
 }

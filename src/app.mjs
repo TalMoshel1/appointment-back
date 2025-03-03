@@ -7,6 +7,7 @@ import connectToDb from "./db/connectToDb.js";
 import lessonRoutes from "./routes/lesson.js";
 import authRoutes from "./routes/auth.js";
 import messageRoute from "./routes/message.js";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
+app.use(cookieParser());
 
 
 app.use((req, res, next) => {

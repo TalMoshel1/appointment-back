@@ -30,6 +30,7 @@
     "@google-cloud/storage": "^6.9.3",
     "aws-sdk": "^2.1318.0",
     "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.4.7",

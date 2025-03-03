@@ -39,16 +39,14 @@ export async function signIn(req, res) {
   try {
     const { email, password } = req.body;
     const data = await serviceSignIn(email, password);
-    // res.cookie("token", data, { /*this until line 50 is alternative to send it via .json */
-    //   httpOnly: true, 
-    //   secure: true, 
-    //   sameSite: "None",
-    //   maxAge: 24 * 60 * 60 * 1000, 
-    // });
-    // res.status(200).cookie('cookie', {
-    //   data
-    // }).json({success: 'success'})
-    res.json({ data });
+    res.cookie("token", data, {
+        httpOnly: true,
+        secure: true,
+        maxAge: 24 * 60 * 60 * 1000,
+        // maxAge: 5000,
+
+    });
+     res.json({success: 'success', user: data.user});
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -110,14 +108,16 @@ export async function resetPasswordPhone(req, res) {
 }
 
 export function isTokenExpired(req, res) {
-  const authHeader = req.headers['authorization'];
-  if (!authHeader) {
+
+
+  if (!req.cookies?.token) {
     return res.status(401).json({ message: 'Token is missing' });
   }
+  const {token} = req.cookies?.token
 
   
 
-  jwt.verify(authHeader, process.env.JWT_Secret_Key, (err, user) => {
+  jwt.verify(token, process.env.JWT_Secret_Key, (err, user) => {
     if (err) {
       return res.status(403).json({ message: 'Token is invalid or expired' });
     }
