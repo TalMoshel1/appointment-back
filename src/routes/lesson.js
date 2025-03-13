@@ -1,10 +1,11 @@
 import express from 'express';
 import {authenticateToken} from '../middlewares/auth.js';
+import { isNotWebsiteUrl } from '../middlewares/isNotWebsite.js';
 import * as lessonController from '../controllers/lesson.js';
 
 const router = express.Router();
 
-router.post('/group', lessonController.createLesson);
+router.post('/group', authenticateToken, isNotWebsiteUrl, lessonController.createLesson);
 
 router.post('/requestPrivateLesson', lessonController.requestPrivateLesson);
 

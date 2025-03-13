@@ -88,6 +88,98 @@ export async function createLesson(req, res) {
   }
 }
 
+// export async function createLesson(req, res) {
+//   const {
+//     name,
+//     trainer,
+//     description,
+//     day,
+//     startTime,
+//     endTime,
+//     repeatsWeekly,
+//     repeatEndDate,
+//   } = req.body;
+
+//   const parsedRepeatEndDate = repeatsWeekly
+//     ? repeatEndDate
+//       ? new Date(repeatEndDate)
+//       : null
+//     : null;
+
+//   const dayOfWeek = new Date(day).toLocaleString("en-us", { weekday: "short" });
+
+//   const lessonData = {
+//     name,
+//     trainer,
+//     description,
+//     day: new Date(day),
+//     startTime,
+//     endTime,
+//     repeatsWeekly,
+//     type: "group",
+//     isApproved: true,
+//     dayOfWeek: dayOfWeek,
+//   };
+
+//   try {
+//     if (!(name && trainer && day && startTime && endTime)) {
+//       console.log("! Returning 400 - Missing fields");
+//       return res.status(400).json({ message: "Fill in all required fields" });
+//     }
+
+//     let createdLesson;
+//     let additionalLessons = [];
+
+//     if (repeatsWeekly) {
+//       const repeatedIndex = new ObjectId();
+
+//       if (parsedRepeatEndDate) {
+//         const isConflict = await lessonService.checkRepeatedLesson(
+//           { ...lessonData, repeatedIndex },
+//           parsedRepeatEndDate
+//         );
+
+//         if (isConflict) {
+//           console.log("!! Returning 400 - Repeated lesson conflict");
+//           return res
+//             .status(400)
+//             .json({ message: "כבר קבועים שיעורים באחד ממועדים אלו" });
+//         }
+//       }
+
+//       additionalLessons = await lessonService.createWeeklyLessons(
+//         { ...lessonData, repeatedIndex },
+//         parsedRepeatEndDate
+//       );
+
+//       createdLesson = await lessonService.createLesson({
+//         ...lessonData,
+//         repeatedIndex,
+//       });
+//     } else {
+//       const isConflict = await lessonService.checkRepeatedLesson({
+//         ...lessonData,
+//       });
+//       if (isConflict) {
+//         console.log("!!! Returning 403 - Lesson conflict");
+//         return res.status(403).json({ message: "קבוע לך שיעור במועד זה" });
+//       }
+//       createdLesson = await lessonService.createLesson(lessonData);
+//     }
+
+//     if (repeatsWeekly) {
+//       console.log("!!!! Returning 201 - Weekly lessons created");
+//       return res.status(201).json([createdLesson, ...additionalLessons]);
+//     }
+//     console.log("!!!!! Returning 201 - Lesson created");
+//     res.status(201).json(createdLesson);
+//   } catch (error) {
+//     console.error("Error creating lesson:", error);
+//     console.log("!!!!!! Returning 500 - Error");
+//     res.status(500).json({ message: error.message });
+//   }
+// }
+
 export async function requestPrivateLesson(req, res) {
   const {
     day,
@@ -215,6 +307,7 @@ export async function deleteLesson(req, res) {
 }
 
 export async function approvePrivateLesson(req, res) {
+  console.log('gets here!!!')
   const { lessonId } = req.params;
 
   try {

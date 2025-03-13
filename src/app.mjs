@@ -8,6 +8,7 @@ import lessonRoutes from "./routes/lesson.js";
 import authRoutes from "./routes/auth.js";
 import messageRoute from "./routes/message.js";
 import cookieParser from "cookie-parser";
+import corsActions, {allowedOrigins} from './config/cors.js'
 
 dotenv.config();
 
@@ -15,29 +16,17 @@ const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const allowedOriginsString = process.env.ALLOWED_ORIGINS;
-const allowedOrigins = allowedOriginsString.split(',');
 
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (allowedOrigins.includes(origin) || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-  optionsSuccessStatus: 200,
-};
 
-app.use(cors(corsOptions));
+
+
+app.use(cors(corsActions));
 
 
 app.use(express.json());
 
 app.use(cookieParser());
-
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin);
@@ -73,6 +62,5 @@ const PORT = process.env.PORT || 3000;
 connectToDb().then(() => {
   app.listen(PORT, () => {
     console.log(`App listening at port ${PORT}`);
-    console.log("Allowed origins:", allowedOrigins);
   });
 });

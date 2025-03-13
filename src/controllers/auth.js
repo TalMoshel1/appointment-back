@@ -2,14 +2,15 @@ import { serviceSignIn } from "../services/auth.js";
 import { createUser } from "../services/users.js";
 import { User } from "../models/user.js";
 import crypto from "crypto";
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 import { messageService } from "../services/message.js";
+import { getUserRoleByUserId } from "../services/users.js";
 
 export async function registration(req, res) {
   const { username, password, phone, email } = req.body;
   try {
     let role = "regular";
-    const adminPhoneNumbers = ["0502323574",'0544541145'];
+    const adminPhoneNumbers = ["0502323574", "0544541145"];
 
     if (adminPhoneNumbers.includes(phone)) {
       role = "admin";
@@ -39,14 +40,17 @@ export async function signIn(req, res) {
   try {
     const { email, password } = req.body;
     const data = await serviceSignIn(email, password);
-    res.cookie("token", data, {
+    res.cookie(
+      "token",
+      { token: data.token },
+      {
         httpOnly: true,
+        sameSite: 'strict', 
         secure: true,
-        maxAge: 24 * 60 * 60 * 1000,
-        // maxAge: 5000,
-
-    });
-     res.json({success: 'success', user: data.user});
+        maxAge: 24 * 60 * 60 * 1000 * 7,
+      }
+    );
+    res.json({ success: "success" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -73,9 +77,7 @@ export async function forgotPasswordPhone(req, res) {
 
     res.status(200).json({
       body: `נשלח קוד עבור איפוס סיסמה למייל שצורף`,
-
     });
-
   } catch (err) {
     console.error("Error sending WhatsApp message", err);
     res.status(500).json({ message: "Failed to send WhatsApp message" });
@@ -107,22 +109,24 @@ export async function resetPasswordPhone(req, res) {
   }
 }
 
-export function isTokenExpired(req, res) {
-
-
+export function isAdmin(req, res) {
   if (!req.cookies?.token) {
-    return res.status(401).json({ message: 'Token is missing' });
+    return res.status(401).json({ message: "Token is missing" });
   }
-  const {token} = req.cookies?.token
+  const { token } = req.cookies?.token;
 
-  
-
-  jwt.verify(token, process.env.JWT_Secret_Key, (err, user) => {
+  jwt.verify(token, process.env.JWT_Secret_Key, async (err, user) => {
     if (err) {
-      return res.status(403).json({ message: 'Token is invalid or expired' });
+      return res.status(403).json({ message: "Token is invalid or expired" });
     }
-    return res.status(200).json({ message: 'Token is valid' });
+    const userRole = await getUserRoleByUserId(user.userId);
 
+    if (userRole !== "admin") {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized: Insufficient role" });
+    }
 
+    return res.status(200).json({ message: "Token is valid" });
   });
 }
