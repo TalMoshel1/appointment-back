@@ -137,13 +137,18 @@ export async function deleteLesson(lessonId, deleteAll) {
 }
 
 export async function getLessonsForWeek(startOfWeek) {
+  console.log('parameter start of the week: ', startOfWeek)
   if (!(startOfWeek instanceof Date)) {
     startOfWeek = new Date(startOfWeek);
   }
 
   try {
     const endOfWeek = new Date(startOfWeek);
+
     endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    console.log('start of the week: ', startOfWeek, 'end od he week: ', endOfWeek)
+
 
     const startOfWeekUTC = new Date(Date.UTC(
       startOfWeek.getFullYear(), 
@@ -158,6 +163,49 @@ export async function getLessonsForWeek(startOfWeek) {
 
     const lessons = await Lesson.find({
       day: { $gte: startOfWeekUTC, $lte: endOfWeekUTC }
+    });
+
+
+    lessons.sort((a, b) => {
+      const dateA = new Date(a.day);
+      const dateB = new Date(b.day);
+      const timeA = a.startTime.split(':').map(Number);
+      const timeB = b.startTime.split(':').map(Number);
+      const dateTimeA = new Date(dateA.setHours(timeA[0], timeA[1]));
+      const dateTimeB = new Date(dateB.setHours(timeB[0], timeB[1]));
+      return dateTimeA - dateTimeB;
+    });
+
+    return lessons;
+  } catch (error) {
+    throw new Error('Could not fetch lessons for the week');
+  }
+}
+
+export async function getLessonsFor4Week(start) {
+  console.log('start parameter: ', start)
+  if (!(start instanceof Date)) {
+    start = new Date(start);
+  }
+
+  try {
+    const end = new Date(start);
+    end.setDate(start.getDate() + 32);
+
+
+    const startUTC = new Date(Date.UTC(
+      start.getFullYear(), 
+      start.getMonth(), 
+      start.getDate()
+    ));
+    const endUTC = new Date(Date.UTC(
+      end.getFullYear(), 
+      end.getMonth(), 
+      end.getDate()
+    ));
+
+    const lessons = await Lesson.find({
+      day: { $gte: startUTC, $lte: endUTC }
     });
 
 

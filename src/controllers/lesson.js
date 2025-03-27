@@ -1,6 +1,7 @@
 import * as lessonService from "../services/lesson-service.js";
 import { ObjectId } from "mongodb";
 import { messageService } from "../services/message.js";
+import { getPreviousSunday } from "../utlis/getSundayOfTheWeek.js";
 
 export async function createLesson(req, res) {
   const {
@@ -248,6 +249,7 @@ export async function requestPrivateLesson(req, res) {
 export async function getWeeklyLessons(req, res) {
   const { startOfWeek } = req.body;
 
+
   try {
     const lessons = await lessonService.getLessonsForWeek(
       new Date(startOfWeek)
@@ -341,4 +343,22 @@ export async function getDaysLessons(req, res) {
   } catch (e) {
     res.status(500).json({ message: "Error getting day's lessons: ", e });
   }
+}
+
+export async function getNext4weeksLessons(req, res) {
+  const { start } = req.body;
+  console.log('start: ',getPreviousSunday(start), start)
+
+  try {
+    const lessons = await lessonService.getLessonsFor4Week(
+      new Date(getPreviousSunday(start))
+    );
+
+    res.status(200).json(lessons);
+  } catch (error) {
+    console.log('lessons: ', error)
+
+    res.status(500).json({ message: error.message });
+  }
+
 }
