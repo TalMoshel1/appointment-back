@@ -234,13 +234,13 @@ export async function requestPrivateLesson(req, res) {
    https://appointment-back-qd2z.onrender.com/approveLink/${createRequest._id}
   `;
 
-    const sendEmailToApprove = await messageService(
-      studentName,
-      studentMail,
-      "בקשה לאימון אישי",
-      emailBody,
-      "davidaboxing@gmail.com"
-    );
+    // const sendEmailToApprove = await messageService(
+    //   studentName,
+    //   studentMail,
+    //   "בקשה לאימון אישי",
+    //   emailBody,
+    //   "davidaboxing@gmail.com"
+    // );
 
     return res.status(201).json(createRequest);
   }

@@ -7,6 +7,7 @@ export async function messageService(name, email, subject, message, to) {
     );
     return response;
   } catch (error) {
+    console.log('error: ', error)
     throw new Error({ message: error.message });
   }
 }
