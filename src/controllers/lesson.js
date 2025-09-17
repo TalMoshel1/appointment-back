@@ -182,6 +182,7 @@ export async function createLesson(req, res) {
 // }
 
 export async function requestPrivateLesson(req, res) {
+
   const {
     day,
     startTime,
@@ -309,7 +310,6 @@ export async function deleteLesson(req, res) {
 }
 
 export async function approvePrivateLesson(req, res) {
-  console.log('gets here!!!')
   const { lessonId } = req.params;
 
   try {
