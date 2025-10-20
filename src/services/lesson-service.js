@@ -24,7 +24,6 @@ export async function createWeeklyLessons(lessonData, repeatEndDate) {
 
 
   if (!(repeatEndDate instanceof Date) || isNaN(repeatEndDate)) {
-
     throw new Error('Invalid repeatEndDate');
   }
 
